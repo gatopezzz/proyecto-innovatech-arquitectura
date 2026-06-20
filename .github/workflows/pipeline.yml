@@ -1,0 +1,27 @@
+name: Integración Continua (CI) - Innovatech
+
+# Este bloque define CUÁNDO se ejecuta la acción (al hacer push a la rama main)
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest # GitHub nos presta una máquina con Linux
+
+    steps:
+      # Paso 1: Clonar el código de tu repositorio en la máquina de GitHub
+      - name: Checkout del código
+        uses: actions/checkout@v3
+
+      # Paso 2: Verificar que Docker Compose funciona y compila todo
+      - name: Construir imágenes con Docker Compose
+        run: docker-compose build
+
+      # Paso 3: (Opcional por ahora) Levantar los contenedores para asegurar que no hay errores de sintaxis
+      - name: Levantar contenedores en modo prueba
+        run: docker-compose up -d
