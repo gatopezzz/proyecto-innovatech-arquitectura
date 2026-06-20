@@ -18,10 +18,10 @@ jobs:
       - name: Checkout del código
         uses: actions/checkout@v3
 
-      # Paso 2: Verificar que Docker Compose funciona y compila todo
+      # Paso 2: Verificar que Docker Compose funciona y compila todo (¡Sin guion!)
       - name: Construir imágenes con Docker Compose
-        run: docker-compose build
+        run: docker compose build
 
-      # Paso 3: (Opcional por ahora) Levantar los contenedores para asegurar que no hay errores de sintaxis
+      # Paso 3: Levantar los contenedores en modo prueba (¡Sin guion!)
       - name: Levantar contenedores en modo prueba
-        run: docker-compose up -d
+        run: docker compose up -d
