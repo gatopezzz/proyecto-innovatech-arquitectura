@@ -18,7 +18,7 @@ services:
       - db_data:/var/lib/mysql
 
   backend-ventas:
-    image: TU_USUARIO_DOCKERHUB/innovatech-deploy-backend-ventas:latest
+    image: gatopezzz/innovatech-deploy-backend-ventas:latest
     build:
       context: ./back-Ventas_SpringBoot/Springboot-API-REST
       dockerfile: Dockerfile
@@ -37,7 +37,7 @@ services:
       - db
 
   backend-despachos:
-    image: TU_USUARIO_DOCKERHUB/innovatech-deploy-backend-despachos:latest
+    image: gatopezzz/innovatech-deploy-backend-despachos:latest
     build:
       context: ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
       dockerfile: Dockerfile
