@@ -57,4 +57,4 @@ jobs:
             
             # 3. Descargar las imágenes de Docker Hub y levantar el proyecto
             sudo docker-compose pull
-            sudo docker-compose up -d --remove-orphans
+            sudo docker-compose up -d --no-build --remove-orphans
