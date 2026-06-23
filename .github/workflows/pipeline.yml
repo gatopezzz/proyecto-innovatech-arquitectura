@@ -40,7 +40,7 @@ jobs:
           source: "docker-compose.yml"
           target: "~/innovatech-deploy"
 
-      # Paso 6: Conectarse por SSH a la EC2, descargar las imágenes nuevas y levantar todo
+      # Paso 6: Conectarse por SSH, instalar Docker Compose y desplegar
       - name: Desplegar en EC2
         uses: appleboy/ssh-action@master
         with:
@@ -48,7 +48,13 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # 1. Descargar e instalar Docker Compose en la EC2
+            sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/bin/docker-compose
+            sudo chmod +x /usr/bin/docker-compose
+            
+            # 2. Entrar a la carpeta donde copiamos el archivo
             cd ~/innovatech-deploy
-            # Usamos docker-compose con guion para el servidor de AWS
-            docker-compose pull
-            docker-compose up -d --remove-orphans
+            
+            # 3. Descargar las imágenes de Docker Hub y levantar el proyecto
+            sudo docker-compose pull
+            sudo docker-compose up -d --remove-orphans
