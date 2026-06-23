@@ -56,7 +56,7 @@ services:
       - db
 
   frontend:
-    image: TU_USUARIO_DOCKERHUB/innovatech-deploy-frontend:latest
+    image: gatopezzz/innovatech-deploy-frontend:latest
     build:
       context: ./front_despacho
       dockerfile: Dockerfile
