@@ -50,21 +50,20 @@ jobs:
       # ==========================================
       # ¡LO QUE FALTABA!: ETAPA 2 - DEPLOY EN ECS
       # ==========================================
+      # ==========================================
+      # ETAPA 2 - DEPLOY EN ECS
+      # ==========================================
       # Paso 5: Notificar al Clúster ECS que descargue las nuevas imágenes de ECR y reinicie los servicios.
       - name: Desplegar actualizaciones en AWS ECS Cluster
         run: |
-          # Definimos el nombre del clúster que crearemos en AWS
           CLUSTER_NAME="innovatech-cluster"
           
           echo "Iniciando despliegue automatizado en el clúster ECS..."
           
-          # 1. Forzar recarga del Servicio Frontend
-          aws ecs update-service --cluster $CLUSTER_NAME --service innovatech-frontend-service --force-new-deployment
-          
-          # 2. Forzar recarga del Servicio Backend Ventas
+          # 1. Forzar recarga del Servicio Backend Ventas
           aws ecs update-service --cluster $CLUSTER_NAME --service innovatech-backend-ventas-service --force-new-deployment
           
-          # 3. Forzar recarga del Servicio Backend Despachos
+          # 2. Forzar recarga del Servicio Backend Despachos
           aws ecs update-service --cluster $CLUSTER_NAME --service innovatech-backend-despachos-service --force-new-deployment
           
           echo "¡Despliegue enviado con éxito a AWS ECS! Los contenedores se están actualizando..."
