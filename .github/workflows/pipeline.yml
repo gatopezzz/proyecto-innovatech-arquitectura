@@ -36,15 +36,16 @@ jobs:
           IMAGE_TAG: latest
         run: |
           # 1. Componente FRONTEND
-          docker build -t $ECR_REGISTRY/innovatech-frontend:$IMAGE_TAG ./frontend
+          docker build -t $ECR_REGISTRY/innovatech-frontend:$IMAGE_TAG ./front_despacho
           docker push $ECR_REGISTRY/innovatech-frontend:$IMAGE_TAG
 
           # 2. Componente BACKEND VENTAS
-          docker build -t $ECR_REGISTRY/innovatech-backend-ventas:$IMAGE_TAG ./backend-ventas
+          docker build -t $ECR_REGISTRY/innovatech-backend-ventas:$IMAGE_TAG ./back-Ventas_SpringBoot
           docker push $ECR_REGISTRY/innovatech-backend-ventas:$IMAGE_TAG
 
           # 3. Componente BACKEND DESPACHOS
-          docker build -t $ECR_REGISTRY/innovatech-backend-despachos:$IMAGE_TAG ./backend-despachos
+          # Nota: Verifica que "Springboot-API-REST-DESPACHOS" sea el nombre exacto de tu subcarpeta
+          docker build -t $ECR_REGISTRY/innovatech-backend-despachos:$IMAGE_TAG ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHOS
           docker push $ECR_REGISTRY/innovatech-backend-despachos:$IMAGE_TAG
 
       # ==========================================
