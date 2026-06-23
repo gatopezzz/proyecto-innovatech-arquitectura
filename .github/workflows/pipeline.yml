@@ -1,4 +1,4 @@
-name: CI/CD Pipeline Innovatech
+name: CI/CD Pipeline Innovatech - EP3 Complete
 
 # La rúbrica exige que el trigger sea en la rama 'deploy'
 on:
@@ -15,46 +15,56 @@ jobs:
       - name: Checkout del código
         uses: actions/checkout@v3
 
-      # Paso 2: Iniciar sesión en Docker Hub usando tus Secrets
-      - name: Iniciar sesión en Docker Hub
-        uses: docker/login-action@v2
+      # Paso 2: Autenticación usando las credenciales temporales del Lab (LabRole)
+      - name: Configurar credenciales de AWS
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }} # Crítico para AWS Academy/Learner Labs
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      # Paso 3: Construir las imágenes con Docker Compose V2
-      - name: Construir imágenes
-        run: docker compose build
+      # Paso 3: Inicio de sesión automático en Amazon ECR
+      - name: Iniciar sesión en Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-      # Paso 4: Subir las imágenes a Docker Hub
-      - name: Subir imágenes a Docker Hub
-        run: docker compose push
+      # Paso 4: Construir y subir las 3 imágenes correspondientes a ECR
+      - name: Construir y subir imágenes a Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: latest
+        run: |
+          # 1. Componente FRONTEND
+          docker build -t $ECR_REGISTRY/innovatech-frontend:$IMAGE_TAG ./frontend
+          docker push $ECR_REGISTRY/innovatech-frontend:$IMAGE_TAG
 
-      # Paso 5: Copiar el archivo docker-compose.yml a la máquina EC2
-      - name: Copiar docker-compose al servidor EC2
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "docker-compose.yml"
-          target: "~/innovatech-deploy"
+          # 2. Componente BACKEND VENTAS
+          docker build -t $ECR_REGISTRY/innovatech-backend-ventas:$IMAGE_TAG ./backend-ventas
+          docker push $ECR_REGISTRY/innovatech-backend-ventas:$IMAGE_TAG
 
-      # Paso 6: Conectarse por SSH, instalar Docker Compose y desplegar
-      - name: Desplegar en EC2
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            # 1. Descargar e instalar Docker Compose en la EC2
-            sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/bin/docker-compose
-            sudo chmod +x /usr/bin/docker-compose
-            
-            # 2. Entrar a la carpeta donde copiamos el archivo
-            cd ~/innovatech-deploy
-            
-            # 3. Descargar las imágenes de Docker Hub y levantar el proyecto
-            sudo docker-compose pull
-            sudo docker-compose up -d --no-build --remove-orphans
+          # 3. Componente BACKEND DESPACHOS
+          docker build -t $ECR_REGISTRY/innovatech-backend-despachos:$IMAGE_TAG ./backend-despachos
+          docker push $ECR_REGISTRY/innovatech-backend-despachos:$IMAGE_TAG
+
+      # ==========================================
+      # ¡LO QUE FALTABA!: ETAPA 2 - DEPLOY EN ECS
+      # ==========================================
+      # Paso 5: Notificar al Clúster ECS que descargue las nuevas imágenes de ECR y reinicie los servicios.
+      - name: Desplegar actualizaciones en AWS ECS Cluster
+        run: |
+          # Definimos el nombre del clúster que crearemos en AWS
+          CLUSTER_NAME="innovatech-cluster"
+          
+          echo "Iniciando despliegue automatizado en el clúster ECS..."
+          
+          # 1. Forzar recarga del Servicio Frontend
+          aws ecs update-service --cluster $CLUSTER_NAME --service innovatech-frontend-service --force-new-deployment
+          
+          # 2. Forzar recarga del Servicio Backend Ventas
+          aws ecs update-service --cluster $CLUSTER_NAME --service innovatech-backend-ventas-service --force-new-deployment
+          
+          # 3. Forzar recarga del Servicio Backend Despachos
+          aws ecs update-service --cluster $CLUSTER_NAME --service innovatech-backend-despachos-service --force-new-deployment
+          
+          echo "¡Despliegue enviado con éxito a AWS ECS! Los contenedores se están actualizando..."
