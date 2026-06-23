@@ -49,7 +49,6 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd ~/innovatech-deploy
-            # Descargar las últimas versiones de las imágenes desde Docker Hub
-            docker compose pull
-            # Levantar los contenedores en segundo plano y eliminar huérfanos
-            docker compose up -d --remove-orphans
+            # Usamos docker-compose con guion para el servidor de AWS
+            docker-compose pull
+            docker-compose up -d --remove-orphans
