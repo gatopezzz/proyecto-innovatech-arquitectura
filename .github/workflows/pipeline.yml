@@ -1,27 +1,69 @@
-name: Integración Continua (CI) - Innovatech
+name: CI/CD Pipeline Innovatech - EP3 Complete
 
-# Este bloque define CUÁNDO se ejecuta la acción (al hacer push a la rama main)
+# La rúbrica exige que el trigger sea en la rama 'deploy'
 on:
   push:
     branches:
-      - main
-  pull_request:
-    branches:
-      - main
+      - deploy
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest # GitHub nos presta una máquina con Linux
+  build-push-deploy:
+    runs-on: ubuntu-latest
 
     steps:
-      # Paso 1: Clonar el código de tu repositorio en la máquina de GitHub
+      # Paso 1: Clonar el código del repositorio
       - name: Checkout del código
         uses: actions/checkout@v3
 
-      # Paso 2: Verificar que Docker Compose funciona y compila todo (¡Sin guion!)
-      - name: Construir imágenes con Docker Compose
-        run: docker compose build
+      # Paso 2: Autenticación usando las credenciales temporales del Lab (LabRole)
+      - name: Configurar credenciales de AWS
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }} # Crítico para AWS Academy/Learner Labs
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      # Paso 3: Levantar los contenedores en modo prueba (¡Sin guion!)
-      - name: Levantar contenedores en modo prueba
-        run: docker compose up -d
+      # Paso 3: Inicio de sesión automático en Amazon ECR
+      - name: Iniciar sesión en Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # Paso 4: Construir y subir las 3 imágenes correspondientes a ECR
+      - name: Construir y subir imágenes a Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: latest
+        run: |
+          # 1. Componente FRONTEND
+          docker build -t $ECR_REGISTRY/innovatech-frontend:$IMAGE_TAG ./front_despacho
+          docker push $ECR_REGISTRY/innovatech-frontend:$IMAGE_TAG
+
+          # 2. Componente BACKEND VENTAS
+          docker build -t $ECR_REGISTRY/innovatech-backend-ventas:$IMAGE_TAG ./back-Ventas_SpringBoot/Springboot-API-REST
+          docker push $ECR_REGISTRY/innovatech-backend-ventas:$IMAGE_TAG
+
+          # 3. Componente BACKEND DESPACHOS
+          docker build -t $ECR_REGISTRY/innovatech-backend-despachos:$IMAGE_TAG ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
+          docker push $ECR_REGISTRY/innovatech-backend-despachos:$IMAGE_TAG
+
+      # ==========================================
+      # ¡LO QUE FALTABA!: ETAPA 2 - DEPLOY EN ECS
+      # ==========================================
+      # ==========================================
+      # ETAPA 2 - DEPLOY EN ECS
+      # ==========================================
+      # Paso 5: Notificar al Clúster ECS que descargue las nuevas imágenes de ECR y reinicie los servicios.
+      - name: Desplegar actualizaciones en AWS ECS Cluster
+        run: |
+          CLUSTER_NAME="innovatech-cluster"
+          
+          echo "Iniciando despliegue automatizado en el clúster ECS..."
+          
+          # 1. Forzar recarga del Servicio Backend Ventas
+          aws ecs update-service --cluster $CLUSTER_NAME --service innovatech-backend-ventas-service --force-new-deployment
+          
+          # 2. Forzar recarga del Servicio Backend Despachos
+          aws ecs update-service --cluster $CLUSTER_NAME --service innovatech-backend-despachos-service --force-new-deployment
+          
+          echo "¡Despliegue enviado con éxito a AWS ECS! Los contenedores se están actualizando..."

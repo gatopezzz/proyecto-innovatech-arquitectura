@@ -18,6 +18,7 @@ services:
       - db_data:/var/lib/mysql
 
   backend-ventas:
+    image: gatopezzz/innovatech-deploy-backend-ventas:latest
     build:
       context: ./back-Ventas_SpringBoot/Springboot-API-REST
       dockerfile: Dockerfile
@@ -36,6 +37,7 @@ services:
       - db
 
   backend-despachos:
+    image: gatopezzz/innovatech-deploy-backend-despachos:latest
     build:
       context: ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
       dockerfile: Dockerfile
@@ -54,8 +56,8 @@ services:
       - db
 
   frontend:
+    image: gatopezzz/innovatech-deploy-frontend:latest
     build:
-      # El frontend estaba bien en la primera capa
       context: ./front_despacho
       dockerfile: Dockerfile
     container_name: frontend_app
